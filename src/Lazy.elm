@@ -155,30 +155,34 @@ apply f x =
 steps that all need to be performed lazily. This can be nice when you need to
 pattern match on a value, for example, when appending lazy lists:
 
-    type List a = Empty | Node a (Lazy (List a))
+    type LazyList a = Empty | Cons a (Lazy (LazyList a))
 
-    cons : a -> Lazy (List a) -> Lazy (List a)
-    cons first rest =
-      Lazy.map (Node first) rest
+    cons : a -> Lazy (LazyList a) -> Lazy (LazyList a)
+    cons v lazylist =
+      Lazy.map (\x -> Cons v <| lazy (\() -> x)) lazylist
 
-    append : Lazy (List a) -> Lazy (List a) -> Lazy (List a)
-    append lazyList1 lazyList2 =
+    append : Lazy (LazyList a) -> Lazy (LazyList a) -> Lazy (LazyList a)
+    append list1 list2 =
       let
-        appendHelp list1 =
-          case list1 of
-            Empty ->
-              lazyList2
+        appendi lazylist1 =
+          let appendHelp ll1 =
+            case ll1 of
+              Empty -> list2
+              Cons first rest ->
+                cons first (appendi rest)
+          in
+            lazylist1 |> Lazy.andThen appendHelp
+      in appendi list1
 
-            Node first rest ->
-              cons first (append rest list2))
-      in
-        lazyList1
-          |> Lazy.andThen appendHelp
 
-
-By using `andThen` we ensure that neither `lazyList1` or `lazyList2` are forced
+By using `andThen` we ensure that neither `lazyList1` nor `lazyList2` are forced
 before they are needed. So as written, the `append` function delays the pattern
 matching until later.
+Note that although this is the way to write `cons' and `append' for a `Lazy (Lazylist a)`
+so as to avoid "The Halting Problem" and make infinite lazy lists possible inside the wrapper,
+which would otherwise cause stack overflow (or detection and an exception thrown),
+the extra level of laziness of the outer `Lazy' wrapper costs much in terms of performance
+due to the number of force/thunk/lazy chains of function calls/composition needed.
 -}
 andThen : (a -> Lazy b) -> Lazy a -> Lazy b
 andThen callback a =

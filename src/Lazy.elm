@@ -49,15 +49,13 @@ lazy thunk =
 For example, maybe we want to set the tail of a lazy list to an Empty node so
 there is no need to defer the calculation as it is a simple constant:
 
-    type LazyListNode a = Empty | Cons a (LazyList a)
-    type alias LasyList a = Lazy (LazyListNode a)
+    type LazyList a = Empty | Cons a (Lazy (LazyList a))
 
     shortLazyList : LazyList Int
     shortLazyList =
-      lazy <| Cons 1 <| lazyFromValue Empty
+      Cons 1 <| lazyFromValue Empty
 
-Now the overall shortLazyList is lazy in case the head of the list is complex to
-calculate (unlike here) but the tail of the shortLazyList is immediately available to
+Now the tail of the shortLazyList is immediately available to
 force without calling an evaluation functtion.
 -}
 lazyFromValue : a -> Lazy a

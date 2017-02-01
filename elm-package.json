@@ -1,4 +1,5 @@
 {
+    "version": "2.0.0",
     "summary": "Basic primitives for working with laziness",
     "repository": "http://github.com/elm-lang/lazy.git",
     "license": "BSD3",

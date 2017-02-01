@@ -42,7 +42,7 @@ Now we only pay for `lazySum` if we actually need it.
 -}
 lazy : (() -> a) -> Lazy a
 lazy thunk =
-  Unevaluated thunk
+  Native.Lazy.lazy thunk
 
 
 {-| `lazyFromValue' Sets the created Lazy a to an already evaluated value.
@@ -60,7 +60,7 @@ force without calling an evaluation functtion.
 -}
 lazyFromValue : a -> Lazy a
 lazyFromValue v =
-  Evaluated v
+  Native.Lazy.lazyFromValue v
 
 
 {-| Force the evaluation of a lazy value. This means we only pay for the
@@ -80,10 +80,8 @@ the first one, but all the rest are very cheap, basically just looking up a
 value in memory.
 -}
 force : Lazy a -> a
-force lzy =
-  case lzy of
-    Evaluated a -> a
-    Unevaluated _ -> Native.Lazy.memoize lzy
+force (Lazy thunk) =
+  thunk()
 
 
 

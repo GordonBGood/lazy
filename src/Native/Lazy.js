@@ -11,9 +11,9 @@ var memoize = function() {
         return function () {
             var tag = _tu.ctor;
             var v = _tu._0;
-            if (tag === 'Evaluating')
-                throw Error("Lazy.force:  recursive evaluation detected!!!");
-            if (tag == 'Unevaluated') {
+            if (tag !== 'Evaluated') {
+                if (tag === 'Evaluating')
+                    throw Error("Lazy.force:  recursive evaluation detected!!!");
                 _tu.ctor = 'Evaluating';
                 v = v();
                 _tu = { ctor: 'Evaluated', _0: v };

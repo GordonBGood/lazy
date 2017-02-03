@@ -2,7 +2,7 @@ module Lazy exposing
     ( Lazy
     , force, lazy, lazyFromValue
     , map, map2, map3, map4, map5
-    , apply, andThen
+    , apply, andThen, fix
     )
 
 {-| This library lets you delay a computation until later.
@@ -15,6 +15,9 @@ module Lazy exposing
 
 # Chaining
 @docs apply, andThen
+
+# Recursion
+@docs fix
 -}
 
 import Native.Lazy
@@ -185,3 +188,38 @@ due to the number of force/thunk/lazy chains of function calls/composition neede
 andThen : (a -> Lazy b) -> Lazy a -> Lazy b
 andThen callback a =
   lazy (\() -> force (callback (force a)))
+
+
+
+-- FORMING RECURSION
+
+
+{-| The shared lazy `fix' point function is a functional expression for recursion:
+it is called "shared" because the result accumulates to the same binding as
+is the argument to the function, thus making the binding recursive.
+This "lazy" version only works with delayed execution functions as
+the checks built into `force' will prevent recursive evaluation and
+potential stack overflow, throwing an exception before that happens.
+Common uses are with lazy lists with deferred execution in their structure.
+For example, using a function that produces a lazy list (delayed execution) of
+all the 32-bit `Int' natural numbers (with upper bounds check) code as follows::
+
+    type LazyList a = Empty | Cons a (Lazy (LazyList a))
+
+    plus1 ll =
+      case ll of
+        Empty -> Empty
+        Cons hd tl ->
+          if hd == ox7FFFFFFF then Empty else
+          Cons (hd + 1) <| lazy <| \() -> plus1 <| force tl
+
+    nat32fs() =
+      fix <| plus1 << Cons -1
+    
+By using `fix' we get a recursive (lazy) chain of computations
+producing the lazy list of all naturals in this case, although this is a
+contrived case and there are more direct ways to accomplish this task.
+-}
+fix : (Lazy a -> a) -> a
+fix f =
+  let r = lazy <| \() -> f r in force r

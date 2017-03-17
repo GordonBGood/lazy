@@ -38,8 +38,7 @@ import Native.Lazy
 {-| A wrapper around a value that will be lazily evaluated.
 -}
 type Lazy a
-    = Evaluated a
-    | Unevaluated (() -> a)
+    = Lazy (() -> a)
 
 
 {-| Delay the evaluation of a value until later. For example, maybe we will
